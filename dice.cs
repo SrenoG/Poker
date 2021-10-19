@@ -19,7 +19,7 @@ class RNGCSP {
             byte second;
             do {
                 first = RollDice((byte)results.Length);
-                second = RollDice((byte)results.Length); 
+                second = RollDice((byte)results.Length);
             } while (distributedCard.Contains(first) || distributedCard.Contains(second));
             distributedCard.Add(first);
             distributedCard.Add(second);
@@ -31,7 +31,7 @@ class RNGCSP {
         }
         for (int i = 0; i <= board.Length - 1; i++) {
             do {
-                board[i] = RollDice((byte)results.Length);                
+                board[i] = RollDice((byte)results.Length);
             }
             while (distributedCard.Contains(board[i]));
             distributedCard.Add(board[i]);
@@ -47,7 +47,7 @@ class RNGCSP {
         Console.WriteLine("FLOP :");
         Console.WriteLine("--------------");
         for (int i = 0; i < 3; i++) {
-            Console.WriteLine(Enum.GetName(typeof(Card), board[i]));           
+            Console.WriteLine(Enum.GetName(typeof(Card), board[i]));
         }
         Console.WriteLine("Continue?");
         Console.ReadKey();
@@ -67,14 +67,33 @@ class RNGCSP {
     }
 
 
-    public class player{
+    public class player {
         public string Name { get; set; }
         public string Card1 { get; set; }
         public string Card2 { get; set; }
     }
 
-
-
+    public enum Color {
+        Trefle = 1,
+        Pique = 2,
+        Coeur = 3,
+        Carreau = 4
+    }
+    public enum CardNumber {
+        Deux = 2,
+        Trois = 3,
+        Quatre = 4,
+        Cinq = 5,
+        Six = 6,
+        Sept = 7,
+        Huit = 8,
+        Neuf = 9,
+        Dix = 10,
+        Valet = 11,
+        Dame = 12,
+        Roi = 13,
+        As = 14
+    }
     public enum Card {
         DeuxCarreau = 1,
         TroisCarreau = 2,
