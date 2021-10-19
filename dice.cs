@@ -3,23 +3,34 @@ using System.IO;
 using System.Text;
 using System.Security.Cryptography;
 using System.Collections.Generic;
+using System.Linq;
 
 class RNGCSP {
     private static RNGCryptoServiceProvider rngCsp = new RNGCryptoServiceProvider();
     // Main method.
+    private Dictionary<byte, byte> distCard = new Dictionary<byte, byte>();
+    static int[] cardNumber = new int[13];
+    static int[] cardColor = new int[4];
+    static byte[] board = new byte[5];
     public static void Main() {
+        //var decks = Enumerable.Range(0, 52);
+        //for (int i = 0; i < 10; i++) {
+        //    var d = decks.OrderBy(x => Guid.NewGuid().ToString("N")).Take(2).ToArray();
+        //    Console.WriteLine(d[0] + " " + d[1]);
+        //}
+        //return;
+
+
         int numberOfPlayer = 2;
-        int[] results = new int[52];
-        byte[] board = new byte[5];
         List<player> playerList = new List<player>();
-        List<byte> distributedCard = new List<byte>();
+        //List<byte> distributedCard = new List<byte>();
 
         for (int i = 1; i <= numberOfPlayer; i++) {
-            byte first;
-            byte second;
+            KeyValuePair<byte, byte> first;
+            KeyValuePair<byte, byte> second;
             do {
-                first = RollDice((byte)results.Length);
-                second = RollDice((byte)results.Length);
+                first = GenerateCard(cardNumber, cardColor);
+                second = GenerateCard(cardNumber, cardColor);
             } while (distributedCard.Contains(first) || distributedCard.Contains(second));
             distributedCard.Add(first);
             distributedCard.Add(second);
@@ -66,34 +77,66 @@ class RNGCSP {
         rngCsp.Dispose();
     }
 
+    private static KeyValuePair<byte, byte> GenerateHand(int[] cardNumber, int[] cardColor) {
+        return new KeyValuePair<byte, byte>(RollDice((byte)cardNumber.Length), RollDice((byte)cardColor.Length));
+    }
 
     public class player {
         public string Name { get; set; }
-        public string Card1 { get; set; }
-        public string Card2 { get; set; }
+        KeyValuePair<byte, byte> Card1 { get; set; }
+        KeyValuePair<byte, byte> Card2 { get; set; }
+
     }
 
-    public enum Color {
-        Trefle = 1,
-        Pique = 2,
-        Coeur = 3,
-        Carreau = 4
+
+    //public enum CardNumber {
+    //    Deux = 2,
+    //    Trois = 3,
+    //    Quatre = 4,
+    //    Cinq = 5,
+    //    Six = 6,
+    //    Sept = 7,
+    //    Huit = 8,
+    //    Neuf = 9,
+    //    Dix = 10,
+    //    Valet = 11,
+    //    Dame = 12,
+    //    Roi = 13,
+    //    As = 14
+    //}
+
+    public List<byte> CardNumber { 
+        get {
+            return new List<byte>() {
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13
+            };
+        }
     }
-    public enum CardNumber {
-        Deux = 2,
-        Trois = 3,
-        Quatre = 4,
-        Cinq = 5,
-        Six = 6,
-        Sept = 7,
-        Huit = 8,
-        Neuf = 9,
-        Dix = 10,
-        Valet = 11,
-        Dame = 12,
-        Roi = 13,
-        As = 14
+    public List<byte> CardColor {
+        get {
+            return new List<byte>() {
+                1,
+                2,
+                3,
+                4,
+            };
+        }
     }
+
+
+
     public enum Card {
         DeuxCarreau = 1,
         TroisCarreau = 2,
