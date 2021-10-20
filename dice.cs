@@ -8,11 +8,12 @@ using System.Linq;
 class RNGCSP {
     private static RNGCryptoServiceProvider rngCsp = new RNGCryptoServiceProvider();
     // Main method.
-    private Dictionary<byte, byte> distCard = new Dictionary<byte, byte>();
     static int[] cardNumber = new int[13];
     static int[] cardColor = new int[4];
-    static byte[] board = new byte[5];
+    static KeyValuePair<byte, byte>[] board = new KeyValuePair<byte, byte>[5];
     public static void Main() {
+        List<Card> distCard = new List<Card>();
+        //Dictionary<byte, byte> distCard = new Dictionary<byte, byte>();
         //var decks = Enumerable.Range(0, 52);
         //for (int i = 0; i < 10; i++) {
         //    var d = decks.OrderBy(x => Guid.NewGuid().ToString("N")).Take(2).ToArray();
@@ -22,182 +23,171 @@ class RNGCSP {
 
 
         int numberOfPlayer = 2;
-        List<player> playerList = new List<player>();
-        //List<byte> distributedCard = new List<byte>();
+        List<Player> playerList = new List<Player>();
 
-        for (int i = 1; i <= numberOfPlayer; i++) {
-            KeyValuePair<byte, byte> first;
-            KeyValuePair<byte, byte> second;
-            do {
-                first = GenerateCard(cardNumber, cardColor);
-                second = GenerateCard(cardNumber, cardColor);
-            } while (distributedCard.Contains(first) || distributedCard.Contains(second));
-            distributedCard.Add(first);
-            distributedCard.Add(second);
-            playerList.Add(new player() {
+        for (int i = 1; i <= numberOfPlayer; i++) 
+        {
+            playerList.Add(new Player() 
+            { 
                 Name = "Player" + i,
-                Card1 = Enum.GetName(typeof(Card), first),
-                Card2 = Enum.GetName(typeof(Card), second),
+                Hand = new Hand ()
+                { 
+                    Card1 = GenerateCard(cardNumber, cardColor, distCard),
+                    Card2 = GenerateCard(cardNumber, cardColor, distCard)
+                }
             });
         }
-        for (int i = 0; i <= board.Length - 1; i++) {
-            do {
-                board[i] = RollDice((byte)results.Length);
-            }
-            while (distributedCard.Contains(board[i]));
-            distributedCard.Add(board[i]);
-        }
-        foreach (player item in playerList) {
+
+        foreach (Player player in playerList) {
             Console.WriteLine("-------------------");
-            Console.WriteLine("NOM :" + item.Name);
-            Console.WriteLine("CARTE 1 :" + item.Card1);
-            Console.WriteLine("CARTE 2 :" + item.Card2);
+            Console.WriteLine("NOM :" + player.Name);
+            Console.WriteLine("CARTE 1 :" + getCard(player.Hand.Card1));
+            Console.WriteLine("CARTE 2 :" + getCard(player.Hand.Card2));
             Console.WriteLine("-------------------");
         }
         Console.WriteLine("--------------");
         Console.WriteLine("FLOP :");
         Console.WriteLine("--------------");
         for (int i = 0; i < 3; i++) {
-            Console.WriteLine(Enum.GetName(typeof(Card), board[i]));
+            Console.WriteLine(getCard(GenerateCard(cardNumber, cardColor, distCard)));
         }
         Console.WriteLine("Continue?");
         Console.ReadKey();
         Console.WriteLine("--------------");
         Console.WriteLine("Turn :");
-        Console.WriteLine(Enum.GetName(typeof(Card), 3));
+        Console.WriteLine(getCard(GenerateCard(cardNumber, cardColor, distCard)));
         Console.WriteLine("--------------");
         Console.WriteLine("Continue?");
         Console.ReadKey();
         Console.WriteLine("--------------");
         Console.WriteLine("River :");
-        Console.WriteLine(Enum.GetName(typeof(Card), 4));
+        Console.WriteLine(getCard(GenerateCard(cardNumber, cardColor, distCard)));
         Console.WriteLine("--------------");
         Console.ReadKey();
-
         rngCsp.Dispose();
     }
 
-    private static KeyValuePair<byte, byte> GenerateHand(int[] cardNumber, int[] cardColor) {
-        return new KeyValuePair<byte, byte>(RollDice((byte)cardNumber.Length), RollDice((byte)cardColor.Length));
+    private static Card GenerateCard(int[] cardNumber, int[] cardColor, List<Card> distCard) {
+        Card card = new Card();
+        do {
+            card.KvpCard = new KeyValuePair<byte, byte>(RollDice((byte)cardNumber.Length), RollDice((byte)cardColor.Length));
+        }
+        while (distCard.Contains(card));
+        distCard.Add(card);
+        return card;
     }
 
-    public class player {
+    static protected string getCard(Card card) {
+        string number = dicoNumber.FirstOrDefault(x => x.Key == card.KvpCard.Key).Value;
+        string color = dicoColor.FirstOrDefault(x => x.Key == card.KvpCard.Value).Value;
+        return number + " " + color;
+    }
+
+    public class Player {
         public string Name { get; set; }
-        KeyValuePair<byte, byte> Card1 { get; set; }
-        KeyValuePair<byte, byte> Card2 { get; set; }
-
+        private Hand _hand;
+        public Hand Hand {
+            get {
+                if (_hand == null)
+                    return new Hand();
+                else
+                    return _hand;
+            }
+            set {
+                _hand = value;
+            }
+        }
+    }
+    public class Card {
+        public KeyValuePair<byte, byte> KvpCard { get; set; }
+    }
+    public class Hand {
+        public Card Card1 { get; set; }
+        public Card Card2 { get; set; }
+        //private Card _card1;
+        //public Card Card1 {
+        //    get 
+        //        {
+        //            if (_card1 == null)
+        //                return _card1;
+        //            else
+        //                return _card1;
+        //        }
+        //    set { _card1 = value; }
+        //}
+        //private Card _card2;
+        //public Card Card2 {
+        //    get {
+        //        if (_card2 == null)
+        //            return _card2;
+        //        else
+        //            return _card2;
+        //    }
+        //    set { _card2 = value; }
+        //}
     }
 
 
-    //public enum CardNumber {
-    //    Deux = 2,
-    //    Trois = 3,
-    //    Quatre = 4,
-    //    Cinq = 5,
-    //    Six = 6,
-    //    Sept = 7,
-    //    Huit = 8,
-    //    Neuf = 9,
-    //    Dix = 10,
-    //    Valet = 11,
-    //    Dame = 12,
-    //    Roi = 13,
-    //    As = 14
+    static public IDictionary<int, string> dicoNumber {
+        get {
+            return new Dictionary<int, string>() {
+                {1, "As" },
+                {2, "Deux" },
+                {3, "Trois" },
+                {4, "Quatre" },
+                {5, "Cinq" },
+                {6, "Six" },
+                {7, "Sept" },
+                {8, "Huit" },
+                {9, "Neuf" },
+                {10, "Dix" },
+                {11, "Valet" },
+                {12, "Dame" },
+                {13, "Roi" },
+            };
+        }
+    }
+    //static public IDictionary<int, int> dicoNumber {
+    //    get {
+    //        return new Dictionary<int, int>() {
+    //            {1, 10 },
+    //            {2, 20 },
+    //            {3, 30 },
+    //            {4, 40 },
+    //            {5, 50 },
+    //            {6, 60 },
+    //            {7, 70 },
+    //            {8, 80 },
+    //            {9, 90 },
+    //            {10, 100 },
+    //            {11, 110 },
+    //            {12, 120 },
+    //            {13, 130 },
+    //        };
+    //    }
     //}
-
-    public List<byte> CardNumber { 
+    //static public IDictionary<int, int> dicoColor {
+    //    get {
+    //        return new Dictionary<int, int>() {
+    //            {1, 1 },
+    //            {2, 2 },
+    //            {3, 3 },
+    //            {4, 4 },
+    //        };
+    //    }
+    //}
+    static public IDictionary<int, string> dicoColor {
         get {
-            return new List<byte>() {
-                1,
-                2,
-                3,
-                4,
-                5,
-                6,
-                7,
-                8,
-                9,
-                10,
-                11,
-                12,
-                13
-            };
-        }
-    }
-    public List<byte> CardColor {
-        get {
-            return new List<byte>() {
-                1,
-                2,
-                3,
-                4,
+            return new Dictionary<int, string>() {
+                {1, "Carreau" },
+                {2, "Coeur" },
+                {3, "Trèfle" },
+                {4, "Pique" },
             };
         }
     }
 
-
-
-    public enum Card {
-        DeuxCarreau = 1,
-        TroisCarreau = 2,
-        QuatreCarreau = 3,
-        CinqCarreau = 4,
-        SixCarreau = 5,
-        SeptCarreau = 6,
-        HuitCarreau = 7,
-        NeufCarreau = 8,
-        DixCarreau = 9,
-        ValetCarreau = 10,
-        DameCarreau = 11,
-        RoiCarreau = 12,
-        AsCarreau = 13,
-
-        DeuxCoeur = 14,
-        TroisCoeur = 15,
-        QuatreCoeur = 16,
-        CinqCoeur = 17,
-        SixCoeur = 18,
-        SeptCoeur = 19,
-        HuitCoeur = 20,
-        NeufCoeur = 21,
-        DixCoeur = 22,
-        ValetCoeur = 23,
-        DameCoeur = 24,
-        RoiCoeur = 25,
-        AsCoeur = 26,
-
-        DeuxTrefle = 27,
-        TroisTrefle = 28,
-        QuatreTrefle = 29,
-        CinqTrefle = 30,
-        SixTrefle = 31,
-        SeptTrefle = 32,
-        HuitTrefle = 33,
-        NeufTrefle = 34,
-        DixTrefle = 35,
-        ValetTrefle = 36,
-        DameTrefle = 37,
-        RoiTrefle = 38,
-        AsTrefle = 39,
-
-        DeuxPique = 40,
-        TroisPique = 41,
-        QuatrePique = 42,
-        CinqPique = 43,
-        SixPique = 44,
-        SeptPique = 45,
-        HuitPique = 46,
-        NeufPique = 47,
-        DixPique = 48,
-        ValetPique = 49,
-        DamePique = 50,
-        RoiPique = 51,
-        AsPique = 52,
-    }
-
-    // This method simulates a roll of the dice. The input parameter is the
-    // number of sides of the dice.
-
+    #region Generate number
     public static byte RollDice(byte numberSides) {
         if (numberSides <= 0)
             throw new ArgumentOutOfRangeException("numberSides");
@@ -227,5 +217,6 @@ class RNGCSP {
         // 252 through 255 would provide an extra 0, 1, 2, 3 so they are not fair
         // to use.
         return roll < numSides * fullSetsOfValues;
-    }
+    } 
+    #endregion
 }
